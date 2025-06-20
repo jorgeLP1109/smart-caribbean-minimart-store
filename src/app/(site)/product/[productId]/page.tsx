@@ -1,8 +1,16 @@
 import { PrismaClient } from "@prisma/client";
 import Image from "next/image";
 import AddToCartButton from "./AddToCartButton";
+import type { Metadata } from 'next'; // Importa el tipo Metadata
 
 const prisma = new PrismaClient();
+
+// Definimos una interfaz para los props, que es una buena práctica
+interface ProductDetailPageProps {
+  params: {
+    productId: string;
+  };
+}
 
 async function getProduct(productId: string) {
   try {
@@ -16,9 +24,9 @@ async function getProduct(productId: string) {
   }
 }
 
-export async function generateMetadata({ params }: { params: { productId: string } }) {
-    const { productId } = params;
-    const product = await getProduct(productId);
+// --- CORRECCIÓN DE TIPADO AQUÍ ---
+export async function generateMetadata({ params }: ProductDetailPageProps): Promise<Metadata> {
+    const product = await getProduct(params.productId);
     
     if (!product) {
         return { title: 'Product Not Found' };
@@ -29,9 +37,9 @@ export async function generateMetadata({ params }: { params: { productId: string
     };
 }
 
-export default async function ProductDetailPage({ params }: { params: { productId:string } }) {
-  const { productId } = params;
-  const product = await getProduct(productId);
+// --- CORRECCIÓN DE TIPADO AQUÍ ---
+export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
+  const product = await getProduct(params.productId);
 
   if (!product) {
     return (
