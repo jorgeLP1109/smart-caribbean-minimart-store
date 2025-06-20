@@ -1,11 +1,15 @@
 // archivo: src/app/(site)/cart/AddressFormModal.tsx
+
 'use client';
 
 import { useState } from 'react';
 import axios from 'axios';
+import { Address } from '@prisma/client';
+
+
 
 interface AddressFormModalProps {
-  onSuccess: (newAddress: any) => void;
+  onSuccess: (newAddress: Address) => void;
   onClose: () => void;
 }
 

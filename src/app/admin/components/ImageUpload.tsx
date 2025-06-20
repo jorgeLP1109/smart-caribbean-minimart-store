@@ -8,19 +8,22 @@ interface ImageUploadProps {
   onChange: (value: string) => void;
 }
 
+import type { CloudinaryUploadWidgetResults } from 'next-cloudinary';
+
 const ImageUpload: React.FC<ImageUploadProps> = ({ onChange }) => {
-  
-  const handleUpload = useCallback((result: any) => {
+  const handleUpload = useCallback((result: CloudinaryUploadWidgetResults) => {
     // ESTE ES EL CONSOLE.LOG MÁS IMPORTANTE
     console.log('--- CLOUDINARY WIDGET RESULT ---');
     console.log(result);
     // ------------------------------------
 
     // Extraemos la URL segura del objeto de información
-    const imageUrl = result.info?.secure_url;
+    const imageUrl = typeof result.info === 'object' && result.info !== null && 'secure_url' in result.info
+      ? (result.info as { secure_url?: string }).secure_url
+      : undefined;
 
     // Si obtuvimos una URL, la pasamos al componente padre
-    if (imageUrl) {
+    if (result.event === 'success' && imageUrl) {
       console.log('SUCCESS! URL FOUND:', imageUrl);
       onChange(imageUrl);
     }

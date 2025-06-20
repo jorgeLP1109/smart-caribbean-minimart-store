@@ -79,7 +79,7 @@ export default function ProductForm({ product, onSuccess, onClose }: ProductForm
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Product Image</label>
             <ImageUpload
-              value={image}
+              src={image}
               onChange={(url) => setImage(url)}
               disabled={loading}
             />

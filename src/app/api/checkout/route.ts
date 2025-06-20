@@ -6,7 +6,10 @@ import { Address } from "@prisma/client";
 
 export const dynamic = 'force-dynamic';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error('Missing Stripe Secret Key in .env');
+}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(req: NextRequest) {
     try {
@@ -16,28 +19,28 @@ export async function POST(req: NextRequest) {
         if (!cartItems || cartItems.length === 0) {
             return new NextResponse("Cart is empty", { status: 400 });
         }
-        
-        if (!shippingAddress) {
-            return new NextResponse("Shipping address is required", { status: 400 });
-        }
-
-        const headers = await nextHeaders();
-        const origin = headers.get("origin") || "http://localhost:3000";
 
         const line_items = cartItems.map((item) => {
-            const imageUrl = item.product.image ? `${origin}${item.product.image}` : undefined;
+            // Validación crucial: nos aseguramos de que la URL de la imagen sea pública (de Cloudinary)
+            if (!item.product.image || !item.product.image.startsWith('https://res.cloudinary.com')) {
+                throw new Error(`Product "${item.product.name}" has an invalid or local image URL. All product images must be hosted on Cloudinary for checkout.`);
+            }
+            
             return {
                 price_data: {
                     currency: 'usd',
                     product_data: {
                         name: item.product.name,
-                        images: imageUrl ? [imageUrl] : [],
+                        images: [item.product.image], // Usamos directamente la URL de Cloudinary
                     },
                     unit_amount: Math.round(item.product.price * 100),
                 },
                 quantity: item.quantity,
             };
         });
+
+        const headers = await nextHeaders();
+        const origin = headers.get("origin");
 
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
@@ -46,11 +49,7 @@ export async function POST(req: NextRequest) {
             success_url: `${origin}/order/success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${origin}/cart?status=cancelled`,
             metadata: {
-                orderItems: JSON.stringify(cartItems.map(item => ({
-                    productId: item.product.id,
-                    quantity: item.quantity,
-                }))),
-                // Añadimos la dirección de envío a los metadatos
+                orderItems: JSON.stringify(cartItems.map(item => ({ productId: item.product.id, quantity: item.quantity }))),
                 shippingAddress: JSON.stringify(shippingAddress),
             }
         });
@@ -58,7 +57,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ url: session.url });
 
     } catch (error: any) {
-        console.error("[CHECKOUT_ERROR]", error);
+        console.error("[CHECKOUT_API] CRITICAL ERROR:", error.message);
         return new NextResponse(error.message || "Internal Server Error", { status: 500 });
     }
 }
