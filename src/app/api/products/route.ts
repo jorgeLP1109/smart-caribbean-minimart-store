@@ -1,18 +1,13 @@
-// archivo: src/app/api/products/route.ts
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { authOptions } from '../auth/[...nextauth]/route'; // Reutilizamos la config de auth
-import { getServerSession } from 'next-auth';
+import { getAuthSession } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
-// GET: Obtener todos los productos
 export async function GET() {
     try {
         const products = await prisma.product.findMany({
-            orderBy: {
-                createdAt: 'desc',
-            },
+            orderBy: { createdAt: 'desc' },
         });
         return NextResponse.json(products);
     } catch (error) {
@@ -21,10 +16,8 @@ export async function GET() {
     }
 }
 
-// POST: Crear un nuevo producto
 export async function POST(req: Request) {
-    // Primero, verificamos que el usuario sea Admin
-    const session = await getServerSession(authOptions);
+    const session = await getAuthSession();
     if (!session || session.user.role !== 'ADMIN') {
         return new NextResponse('Unauthorized', { status: 401 });
     }
@@ -33,7 +26,7 @@ export async function POST(req: Request) {
         const body = await req.json();
         const { name, description, price, stock, category, image } = body;
 
-        if (!name || !price || !stock) {
+        if (!name || price === undefined || stock === undefined) {
             return new NextResponse('Name, price and stock are required', { status: 400 });
         }
 
@@ -44,7 +37,7 @@ export async function POST(req: Request) {
                 price: parseFloat(price),
                 stock: parseInt(stock, 10),
                 category,
-                image, // Asumimos que la URL de la imagen se envía
+                image,
             },
         });
 

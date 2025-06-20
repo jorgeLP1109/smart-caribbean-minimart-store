@@ -1,25 +1,32 @@
-// archivo: src/app/api/admin/orders/route.ts
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-// ... (importa getServerSession y authOptions como en la API de stats)
+import { getAuthSession } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
 export async function GET() {
-    // ... (lógica de verificación de admin)
+    const session = await getAuthSession();
+    if (!session || session.user.role !== 'ADMIN') {
+        return new NextResponse('Unauthorized', { status: 401 });
+    }
 
-    const orders = await prisma.order.findMany({
-        include: {
-            user: true, // Incluir datos del usuario que hizo la orden
-            items: {      // Incluir los productos de cada orden
-                include: {
-                    product: true,
+    try {
+        const orders = await prisma.order.findMany({
+            include: {
+                user: true,
+                items: {
+                    include: {
+                        product: true,
+                    },
                 },
             },
-        },
-        orderBy: {
-            createdAt: 'desc',
-        },
-    });
-    return NextResponse.json(orders);
+            orderBy: {
+                createdAt: 'desc',
+            },
+        });
+        return NextResponse.json(orders);
+    } catch (error) {
+        console.error('[ADMIN_ORDERS_GET]', error);
+        return new NextResponse('Internal error', { status: 500 });
+    }
 }

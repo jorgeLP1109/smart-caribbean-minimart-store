@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { getAuthSession } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
 export async function GET() {
-    const session = await getServerSession(authOptions);
-
+    const session = await getAuthSession();
     if (!session || session.user.role !== 'ADMIN') {
         return new NextResponse('Unauthorized', { status: 401 });
     }
@@ -17,7 +15,6 @@ export async function GET() {
             orderBy: {
                 createdAt: 'desc',
             },
-            // Opcional: Seleccionar solo los campos que necesitas para no exponer la contraseña hasheada
             select: {
                 id: true,
                 name: true,
@@ -26,7 +23,6 @@ export async function GET() {
                 createdAt: true,
             }
         });
-
         return NextResponse.json(users);
     } catch (error) {
         console.error('[ADMIN_USERS_GET]', error);
