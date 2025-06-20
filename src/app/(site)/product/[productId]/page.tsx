@@ -1,15 +1,13 @@
 import { PrismaClient } from "@prisma/client";
 import Image from "next/image";
 import AddToCartButton from "./AddToCartButton";
-import type { Metadata } from 'next'; // Importa el tipo Metadata
+import type { Metadata, ResolvingMetadata } from 'next';
 
 const prisma = new PrismaClient();
 
-// Definimos una interfaz para los props, que es una buena práctica
-interface ProductDetailPageProps {
-  params: {
-    productId: string;
-  };
+// Definimos un tipo para los props de forma clara
+type Props = {
+  params: { productId: string }
 }
 
 async function getProduct(productId: string) {
@@ -24,27 +22,29 @@ async function getProduct(productId: string) {
   }
 }
 
-// --- CORRECCIÓN DE TIPADO AQUÍ ---
-export async function generateMetadata({ params }: ProductDetailPageProps): Promise<Metadata> {
+// Usamos el tipo 'Props' para ser explícitos
+export async function generateMetadata({ params }: Props, parent: ResolvingMetadata): Promise<Metadata> {
     const product = await getProduct(params.productId);
     
     if (!product) {
         return { title: 'Product Not Found' };
     }
+    
     return {
         title: `${product.name} | Smart Caribbean Minimart`,
         description: product.description,
     };
 }
 
-// --- CORRECCIÓN DE TIPADO AQUÍ ---
-export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
+// Usamos el tipo 'Props' aquí también
+export default async function ProductDetailPage({ params }: Props) {
   const product = await getProduct(params.productId);
 
   if (!product) {
     return (
-      <div className="text-center py-20">
+      <div className="container mx-auto text-center py-20">
         <h1 className="text-2xl font-bold">Product not found.</h1>
+        <p>The product you are looking for does not exist or has been removed.</p>
       </div>
     );
   }
