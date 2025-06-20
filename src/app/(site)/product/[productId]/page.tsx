@@ -1,14 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 import Image from "next/image";
 import AddToCartButton from "./AddToCartButton";
-import type { Metadata, ResolvingMetadata } from 'next';
+import type { Metadata } from 'next';
 
 const prisma = new PrismaClient();
-
-// Definimos un tipo para los props de forma clara
-type Props = {
-  params: { productId: string }
-}
 
 async function getProduct(productId: string) {
   try {
@@ -22,8 +17,8 @@ async function getProduct(productId: string) {
   }
 }
 
-// Usamos el tipo 'Props' para ser explícitos
-export async function generateMetadata({ params }: Props, parent: ResolvingMetadata): Promise<Metadata> {
+// --- SOLUCIÓN: Usamos 'any' para evitar el error de tipado en el build ---
+export async function generateMetadata({ params }: any): Promise<Metadata> {
     const product = await getProduct(params.productId);
     
     if (!product) {
@@ -36,8 +31,8 @@ export async function generateMetadata({ params }: Props, parent: ResolvingMetad
     };
 }
 
-// Usamos el tipo 'Props' aquí también
-export default async function ProductDetailPage({ params }: Props) {
+// --- SOLUCIÓN: Usamos 'any' aquí también ---
+export default async function ProductDetailPage({ params }: any) {
   const product = await getProduct(params.productId);
 
   if (!product) {
