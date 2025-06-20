@@ -39,8 +39,6 @@ export default function ProductForm({ product, onSuccess, onClose }: ProductForm
     setLoading(true);
     setError('');
 
-    // --- CORRECCIÓN FINAL AQUÍ ---
-    // Construimos el objeto explícitamente usando las variables de estado
     const dataToSend = {
       name: name,
       description: description,
@@ -78,8 +76,9 @@ export default function ProductForm({ product, onSuccess, onClose }: ProductForm
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Product Image</label>
+            {/* --- CORRECCIÓN AQUÍ: Cambiamos 'src' por 'value' --- */}
             <ImageUpload
-              src={image}
+              value={image} 
               onChange={(url) => setImage(url)}
               disabled={loading}
             />
