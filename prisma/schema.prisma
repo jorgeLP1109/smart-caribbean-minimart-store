@@ -1,0 +1,160 @@
+// archivo: prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===================================
+//        MODELOS PRINCIPALES
+// ===================================
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          UserRole  @default(USER)
+  
+  // Relaciones existentes
+  accounts      Account[]
+  sessions      Session[]
+  orders        Order[]
+  
+  // --- NUEVA RELACIÓN ---
+  addresses     Address[] // Un usuario ahora puede tener múltiples direcciones
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  image       String?
+  category    String?
+  tags        String[] @default([])
+  stock       Int      @default(0)
+  isOnSale    Boolean  @default(false)
+  salePrice   Float?
+
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id                    String      @id @default(cuid())
+  userId                String
+  user                  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  total                 Float
+  status                OrderStatus @default(PENDING)
+  stripePaymentIntentId String?     @unique
+
+  // --- CAMPO MODIFICADO ---
+  // Ahora guardamos una copia JSON de la dirección de envío en el momento de la orden.
+  // Esto es importante para el historial, por si el usuario borra o edita la dirección en el futuro.
+  shippingAddress       Json?
+
+  items OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum OrderStatus {
+  PENDING   // Esperando pago (ya existe)
+  COMPLETED // Pago realizado (ya existe)
+  PROCESSING // Nuevo: En preparación
+  SHIPPED   // Nuevo: Enviado / En proceso de entrega
+  DELIVERED // Nuevo: Entregado
+  CANCELLED // Cancelado (ya existe)
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int
+  price     Float
+
+  @@unique([orderId, productId])
+}
+
+// --- NUEVO MODELO ADDRESS ---
+// Este modelo almacena las direcciones de envío de los usuarios.
+model Address {
+  id          String  @id @default(cuid())
+  
+  userId      String
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  fullName    String
+  street      String
+  city        String
+  state       String
+  postalCode  String
+  country     String
+  phone       String
+
+  // Para que el usuario pueda marcar una como su dirección por defecto
+  isDefault   Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+// ===================================
+//        MODELOS DE NEXT-AUTH
+// ===================================
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.Text
+  session_state      String?
+  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
