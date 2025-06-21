@@ -1,3 +1,4 @@
+
 // archivo: prisma/schema.prisma
 
 generator client {
@@ -5,10 +6,14 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL") // Asegúrate de tener esta variable en Vercel
 }
 
+// ... (todos tus modelos no cambian)
+
+// ... (tus modelos no cambian)
 // ===================================
 //        MODELOS PRINCIPALES
 // ===================================
