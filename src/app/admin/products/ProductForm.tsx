@@ -95,8 +95,18 @@ export default function ProductForm({ product, onSuccess, onClose }: ProductForm
         toast.success("Product created successfully!");
       }
 
-      await fetch('/api/revalidate?path=/');
-      onSuccess();
+      // --- LLAMADA DE REVALIDACIÓN CORREGIDA Y MÁS ROBUSTA ---
+      console.log("Requesting revalidation for path: /");
+      const res = await fetch(`/api/revalidate?path=/`);
+      if (!res.ok) {
+        console.error("Failed to revalidate:", await res.json());
+        toast.error("Product saved, but failed to refresh home page cache.");
+      } else {
+        console.log("Revalidation successful:", await res.json());
+      }
+      // --- FIN DE LA CORRECCIÓN ---
+
+      onSuccess(); // Esto refresca la lista en el panel de admin
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'An error occurred.';
       toast.error(errorMessage);
@@ -120,7 +130,7 @@ export default function ProductForm({ product, onSuccess, onClose }: ProductForm
                     onChange={handleImageUpload} 
                     disabled={isUploading || loading} 
                     accept="image/*"
-                    title="Upload product image"
+                    placeholder="Upload product image"
                     className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-brand-orange hover:file:bg-orange-100"
                 />
             </div>
