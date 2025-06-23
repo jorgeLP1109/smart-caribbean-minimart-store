@@ -1,19 +1,16 @@
-// archivo: src/lib/prisma.ts
 import { PrismaClient } from '@prisma/client'
-import { withAccelerate } from '@prisma/extension-accelerate' // <-- Importa desde la nueva ubicación
+import { withAccelerate } from '@prisma/extension-accelerate'
 
-// Creamos un cliente de Prisma y le aplicamos la extensión de Accelerate
 const prismaClientSingleton = () => {
   return new PrismaClient().$extends(withAccelerate())
 }
 
-// Usamos un singleton para evitar crear múltiples instancias en desarrollo
-type PrismaClientSingleton = ReturnType<typeof prismaClientSingleton>
-
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClientSingleton | undefined
+declare global {
+  var prisma: undefined | ReturnType<typeof prismaClientSingleton>
 }
 
-export const prisma = globalForPrisma.prisma ?? prismaClientSingleton()
+const prisma = global.prisma ?? prismaClientSingleton()
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+export default prisma
+
+if (process.env.NODE_ENV !== 'production') global.prisma = prisma
