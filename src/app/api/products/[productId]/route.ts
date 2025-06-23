@@ -4,6 +4,7 @@ import { getAuthSession } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
+// DELETE: Eliminar un producto
 export async function DELETE(req: NextRequest) {
     const session = await getAuthSession();
     if (!session || session.user.role !== 'ADMIN') {
@@ -19,6 +20,16 @@ export async function DELETE(req: NextRequest) {
         await prisma.product.delete({
             where: { id: productId },
         });
+
+        // Invalida la caché de la página de inicio.
+        // Construimos la URL completa para asegurarnos de que funcione en el entorno del servidor.
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        const secret = process.env.REVALIDATE_SECRET_TOKEN;
+        
+        // Usamos fetch en lugar de axios para evitar dependencias innecesarias en la API
+        await fetch(`${baseUrl}/api/revalidate?path=/&secret=${secret}`);
+        console.log(`Cache revalidation requested for path: /`);
+
         return new NextResponse(null, { status: 204 });
     } catch (error) {
         console.error('[PRODUCT_DELETE]', error);
@@ -26,6 +37,7 @@ export async function DELETE(req: NextRequest) {
     }
 }
 
+// PUT: Actualizar un producto
 export async function PUT(req: NextRequest) {
     const session = await getAuthSession();
     if (!session || session.user.role !== 'ADMIN') {

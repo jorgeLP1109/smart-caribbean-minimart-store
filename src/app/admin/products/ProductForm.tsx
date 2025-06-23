@@ -5,6 +5,7 @@ import axios from 'axios';
 import { Product } from '@prisma/client';
 import { categories } from '@/config/site';
 import ImageUpload from '../components/ImageUpload';
+import toast from 'react-hot-toast';
 
 interface ProductFormProps {
   product?: Product | null;
@@ -40,12 +41,12 @@ export default function ProductForm({ product, onSuccess, onClose }: ProductForm
     setError('');
 
     const dataToSend = {
-      name: name,
-      description: description,
+      name,
+      description,
       price: parseFloat(price) || 0,
       stock: parseInt(stock, 10) || 0,
-      category: category,
-      image: image,
+      category,
+      image,
     };
 
     if (!dataToSend.name || dataToSend.price <= 0) {
@@ -57,12 +58,22 @@ export default function ProductForm({ product, onSuccess, onClose }: ProductForm
     try {
       if (product) {
         await axios.put(`/api/products/${product.id}`, dataToSend);
+        toast.success("Product updated successfully!");
       } else {
         await axios.post('/api/products', dataToSend);
+        toast.success("Product created successfully!");
       }
+
+      // Invalida la caché de la página de inicio para que se regenere con los nuevos datos.
+      // Usamos una petición GET a nuestra API de revalidación.
+      await fetch('/api/revalidate?path=/');
+      console.log("Cache for '/' revalidated.");
+
       onSuccess();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'An error occurred while saving the product.');
+      const errorMessage = err.response?.data?.message || 'An error occurred while saving the product.';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -76,9 +87,8 @@ export default function ProductForm({ product, onSuccess, onClose }: ProductForm
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Product Image</label>
-            {/* --- CORRECCIÓN AQUÍ: Cambiamos 'src' por 'value' --- */}
             <ImageUpload
-              value={image} 
+              value={image}
               onChange={(url) => setImage(url)}
               disabled={loading}
             />
