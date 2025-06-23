@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import axios from 'axios';
 import { Product } from '@prisma/client';
 import { categories } from '@/config/site';
@@ -22,23 +22,22 @@ export default function ProductForm({ product, onSuccess, onClose }: ProductForm
   const [image, setImage] = useState('');
   
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   useEffect(() => {
     if (product) {
-      setName(product.name);
+      setName(product.name || '');
       setDescription(product.description || '');
-      setPrice(String(product.price));
-      setStock(String(product.stock));
+      setPrice(String(product.price) || '');
+      setStock(String(product.stock) || '');
       setCategory(product.category || '');
       setImage(product.image || '');
     }
   }, [product]);
   
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    toast.dismiss();
 
     const dataToSend = {
       name,
@@ -49,8 +48,8 @@ export default function ProductForm({ product, onSuccess, onClose }: ProductForm
       image,
     };
 
-    if (!dataToSend.name || dataToSend.price <= 0) {
-        setError("Product name and a valid price are required.");
+    if (!dataToSend.name || !dataToSend.category || dataToSend.price <= 0) {
+        toast.error("Name, price, and category are required.");
         setLoading(false);
         return;
     }
@@ -64,15 +63,10 @@ export default function ProductForm({ product, onSuccess, onClose }: ProductForm
         toast.success("Product created successfully!");
       }
 
-      // Invalida la caché de la página de inicio para que se regenere con los nuevos datos.
-      // Usamos una petición GET a nuestra API de revalidación.
       await fetch('/api/revalidate?path=/');
-      console.log("Cache for '/' revalidated.");
-
       onSuccess();
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'An error occurred while saving the product.';
-      setError(errorMessage);
+      const errorMessage = err.response?.data?.message || 'An error occurred.';
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -123,8 +117,6 @@ export default function ProductForm({ product, onSuccess, onClose }: ProductForm
             </select>
           </div>
           
-          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-
           <div className="flex justify-end space-x-4 pt-4">
             <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">
               Cancel
