@@ -69,11 +69,44 @@ export default function ProductForm({ product, onSuccess, onClose }: ProductForm
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // ... (resto de la lógica de submit es la misma)
+    toast.dismiss();
+
+    const dataToSend = {
+      name,
+      description,
+      price: parseFloat(price) || 0,
+      stock: parseInt(stock, 10) || 0,
+      category,
+      image,
+    };
+
+    if (!dataToSend.name || !dataToSend.category || dataToSend.price <= 0) {
+        toast.error("Name, price, and category are required.");
+        setLoading(false);
+        return;
+    }
+
+    try {
+      if (product) {
+        await axios.put(`/api/products/${product.id}`, dataToSend);
+        toast.success("Product updated successfully!");
+      } else {
+        await axios.post('/api/products', dataToSend);
+        toast.success("Product created successfully!");
+      }
+
+      await fetch('/api/revalidate?path=/');
+      onSuccess();
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || 'An error occurred.';
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
       <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <h2 className="text-2xl font-bold mb-6">{product ? 'Edit Product' : 'Add New Product'}</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -88,15 +121,49 @@ export default function ProductForm({ product, onSuccess, onClose }: ProductForm
                     disabled={isUploading || loading} 
                     accept="image/*"
                     title="Upload product image"
-                    placeholder="Choose an image file"
                     className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-brand-orange hover:file:bg-orange-100"
                 />
             </div>
             {isUploading && <p className="text-sm text-blue-600 mt-2">Processing image, please wait...</p>}
           </div>
 
-          {/* ... (resto de los campos del formulario: name, description, etc. no cambian) ... */}
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+            <input id="name" name="name" value={name} onChange={(e) => setName(e.target.value)} required className="mt-1 w-full p-2 border rounded" />
+          </div>
 
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
+            <textarea id="description" name="description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="mt-1 w-full p-2 border rounded" />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="price" className="block text-sm font-medium text-gray-700">Price</label>
+              <input id="price" name="price" type="number" value={price} onChange={(e) => setPrice(e.target.value)} required className="mt-1 w-full p-2 border rounded" step="0.01" />
+            </div>
+            <div>
+              <label htmlFor="stock" className="block text-sm font-medium text-gray-700">Stock</label>
+              <input id="stock" name="stock" type="number" value={stock} onChange={(e) => setStock(e.target.value)} required className="mt-1 w-full p-2 border rounded" />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
+            <select id="category" name="category" value={category} onChange={(e) => setCategory(e.target.value)} required className="mt-1 w-full p-2 border rounded bg-white">
+              <option value="" disabled>Select a category</option>
+              {categories.map((cat) => (<option key={cat.value} value={cat.value}>{cat.label}</option>))}
+            </select>
+          </div>
+          
+          <div className="flex justify-end space-x-4 pt-4">
+            <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">
+              Cancel
+            </button>
+            <button type="submit" disabled={loading || isUploading} className="btn-primary">
+              {loading || isUploading ? 'Saving...' : 'Save Product'}
+            </button>
+          </div>
         </form>
       </div>
     </div>
