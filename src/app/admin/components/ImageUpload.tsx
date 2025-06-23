@@ -14,9 +14,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   onChange,
   disabled,
 }) => {
-  // No necesitamos isMounted aquí
   const handleUpload = (result: any) => {
-    // Solo reaccionamos al evento 'success'
     if (result.event === 'success' && result.info?.secure_url) {
       onChange(result.info.secure_url);
     }
@@ -30,7 +28,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             <Image
               fill
               className="object-cover"
-              alt="Imagen subida"
+              alt="Uploaded product image"
               src={value}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
@@ -38,8 +36,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         )}
       </div>
       <CldUploadWidget 
-        onUpload={handleUpload} // <-- Usamos onUpload en lugar de onSuccess
+        onUpload={handleUpload}
         uploadPreset="ml_default"
+        options={{ maxFiles: 1 }}
       >
         {({ open }) => {
           return (
