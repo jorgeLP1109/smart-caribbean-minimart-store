@@ -95,18 +95,11 @@ export default function ProductForm({ product, onSuccess, onClose }: ProductForm
         toast.success("Product created successfully!");
       }
 
-      // --- LLAMADA DE REVALIDACIÓN CORREGIDA Y MÁS ROBUSTA ---
-      console.log("Requesting revalidation for path: /");
-      const res = await fetch(`/api/revalidate?path=/`);
-      if (!res.ok) {
-        console.error("Failed to revalidate:", await res.json());
-        toast.error("Product saved, but failed to refresh home page cache.");
-      } else {
-        console.log("Revalidation successful:", await res.json());
-      }
-      // --- FIN DE LA CORRECCIÓN ---
+      // Llamada a la nueva API de revalidación segura
+      await axios.post('/api/admin/revalidate', { path: '/' });
+      console.log("Cache revalidation requested for path: /");
 
-      onSuccess(); // Esto refresca la lista en el panel de admin
+      onSuccess();
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'An error occurred.';
       toast.error(errorMessage);
@@ -131,6 +124,7 @@ export default function ProductForm({ product, onSuccess, onClose }: ProductForm
                     disabled={isUploading || loading} 
                     accept="image/*"
                     placeholder="Upload product image"
+                    title="Upload product image"
                     className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-brand-orange hover:file:bg-orange-100"
                 />
             </div>

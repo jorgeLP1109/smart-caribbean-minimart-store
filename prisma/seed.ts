@@ -5,8 +5,8 @@ import bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 async function main() {
-  const adminEmail = "sofitechcomputer@gmail.com"; // <-- REEMPLAZA CON TU EMAIL REAL
-  const adminPassword = "Arwen001"; // <-- REEMPLAZA CON UNA CONTRASEÑA FUERTE
+  const adminEmail = "Smartcaribbean@yahoo.com"; // <-- REEMPLAZA CON TU EMAIL REAL
+  const adminPassword = "Paddington15@"; // <-- REEMPLAZA CON UNA CONTRASEÑA FUERTE
 
   console.log(`Checking for existing admin user: ${adminEmail}`);
 
