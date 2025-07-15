@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
             
             return {
                 price_data: {
-                    currency: 'usd',
+                    currency: 'gbp',
                     product_data: {
                         name: item.product.name,
                         images: [item.product.image], // Usamos directamente la URL de Cloudinary

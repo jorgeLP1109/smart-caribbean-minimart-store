@@ -9,6 +9,7 @@ import axios from "axios";
 import AddressFormModal from "./AddressFormModal";
 import { Address } from "@prisma/client";
 import toast from 'react-hot-toast';
+import { formatPrice } from "@/lib/format";
 
 export default function CartPage() {
   const { items, removeFromCart, updateQuantity } = useCartStore();
@@ -108,7 +109,7 @@ export default function CartPage() {
                 <Image src={product.image || '/placeholder.png'} alt={product.name} width={80} height={80} className="rounded-md object-cover" />
                 <div className="flex-grow ml-4">
                   <h2 className="font-semibold text-lg">{product.name}</h2>
-                  <p className="text-sm text-gray-500">${product.price.toFixed(2)}</p>
+                  <p className="text-sm text-gray-500">{formatPrice(product.price)}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <input
@@ -166,7 +167,7 @@ export default function CartPage() {
               <h2 className="text-xl font-bold mb-4">Order Summary</h2>
               <div className="flex justify-between mb-2">
                 <span>Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>{formatPrice(subtotal)}</span>
               </div>
               <div className="flex justify-between mb-4">
                 <span>Shipping</span>

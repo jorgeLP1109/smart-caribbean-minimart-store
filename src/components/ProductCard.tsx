@@ -3,6 +3,7 @@
 import { Product } from '@prisma/client';
 import Image from 'next/image';
 import Link from 'next/link';
+import { formatPrice } from '@/lib/format';
 
 interface ProductCardProps {
   product: Product;
@@ -34,7 +35,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <p className="text-sm text-gray-500 capitalize">{product.category.replace(/-/g, ' ')}</p>
           )}
           <div className="mt-auto pt-2 text-xl font-bold text-brand-orange">
-            ${product.price.toFixed(2)}
+            {formatPrice(product.price)} {/* <-- Usa la función aquí */}
           </div>
         </div>
       </div>

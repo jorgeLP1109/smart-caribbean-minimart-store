@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import Image from "next/image";
 import AddToCartButton from "./AddToCartButton";
 import type { Metadata } from 'next';
+import { formatPrice } from "@/lib/format"; 
 
 const prisma = new PrismaClient();
 
@@ -60,7 +61,7 @@ export default async function ProductDetailPage({ params }: any) {
             <div className="flex flex-col">
                 {product.category && <p className="text-sm text-gray-500 uppercase">{product.category.replace(/-/g, ' ')}</p>}
                 <h1 className="text-4xl font-bold text-gray-900">{product.name}</h1>
-                <p className="mt-4 text-3xl font-bold text-brand-orange">${product.price.toFixed(2)}</p>
+                <p className="mt-4 text-3xl font-bold text-brand-orange">{formatPrice(product.price)}</p>
                 
                 <div className="mt-2">
                     {product.stock > 0 ? (
